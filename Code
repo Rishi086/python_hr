@@ -1,0 +1,846 @@
+#Imporitng library
+
+#importing library
+%matplotlib inline
+import time
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn import preprocessing
+from sklearn.preprocessing import StandardScaler, OneHotEncoder
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import train_test_split, GridSearchCV 
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
+from sklearn.metrics import classification_report
+
+#Reading dataset
+
+#read dataset
+df = pd.read_csv('HR_Employee_Attrition_Data.csv')
+df.head()
+
+#rows and columns
+df.shape
+
+As we can see dataset contains 2940 rows and 35 columns
+
+#descripitive analysis
+df.describe()
+
+df.info()
+
+Great, dataset does not contains any null values
+
+#Data Visualization
+
+#Dependent/target variable
+print(df['Attrition'].value_counts())
+print(df['Attrition'].value_counts(normalize=True))
+df['Attrition'].value_counts(normalize=True).plot(kind='bar', rot=0, color=('C0','C1'), legend='Attrition')
+
+Insights:
+
+
+*   Majority of the employee not leaving the company 
+*   Approx ~16% attrition happened
+*   We can say the Traget class is imbalance because most of the record approx ~84% belongs to level 'NO'
+
+##Let's visualize continuous variable/feature distribution
+
+fig,ax = plt.subplots(3,5, figsize=(25,10))      
+sns.distplot(df['TotalWorkingYears'], ax = ax[0,0]) 
+sns.distplot(df['YearsAtCompany'], ax = ax[0,1]) 
+sns.distplot(df['DistanceFromHome'], ax = ax[0,2]) 
+sns.distplot(df['YearsInCurrentRole'], ax = ax[0,3]) 
+sns.distplot(df['YearsWithCurrManager'], ax = ax[0,4]) 
+sns.distplot(df['YearsSinceLastPromotion'], ax = ax[1,0]) 
+sns.distplot(df['PercentSalaryHike'], ax = ax[1,1]) 
+sns.distplot(df['YearsSinceLastPromotion'], ax = ax[1,2]) 
+sns.distplot(df['TrainingTimesLastYear'], ax = ax[1,3]) 
+sns.distplot(df['Age'], ax = ax[1,4]) 
+sns.distplot(df['DailyRate'], ax = ax[2,0]) 
+sns.distplot(df['MonthlyIncome'], ax = ax[2,1])
+sns.distplot(df['MonthlyRate'], ax = ax[2,2])
+sns.distplot(df['NumCompaniesWorked'], ax = ax[2,3])
+sns.distplot(df['HourlyRate'], ax = ax[2,4])
+plt.show()
+
+## Let's visualize categorical variables/features
+
+fig,ax = plt.subplots(3,5, figsize=(25,10))      
+sns.countplot(df['BusinessTravel'], ax = ax[0,0]) 
+sns.countplot(df['Department'], ax = ax[0,1]) 
+sns.countplot(df['Education'], ax = ax[0,2]) 
+sns.countplot(df['EducationField'], ax = ax[0,3]) 
+sns.countplot(df['EnvironmentSatisfaction'], ax = ax[0,4]) 
+sns.countplot(df['Gender'], ax = ax[1,0]) 
+sns.countplot(df['JobInvolvement'], ax = ax[1,1]) 
+sns.countplot(df['JobLevel'], ax = ax[1,2]) 
+sns.countplot(df['JobRole'], ax = ax[1,3]) 
+sns.countplot(df['JobSatisfaction'], ax = ax[1,4]) 
+sns.countplot(df['MaritalStatus'], ax = ax[2,0]) 
+sns.countplot(df['OverTime'], ax = ax[2,1])
+sns.countplot(df['PerformanceRating'], ax = ax[2,2])
+sns.countplot(df['RelationshipSatisfaction'], ax = ax[2,3])
+sns.countplot(df['StockOptionLevel'], ax = ax[2,4])
+plt.show()
+
+## Let's analyze independent features which have better effect on Target(Attrition) variable
+
+### Age Feature
+
+attrn = df[df['Attrition']=='No']['Age']
+attry = df[df['Attrition']=='Yes']['Age']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+plt.figure(figsize=(15,8))
+sns.boxplot( x=df["Attrition"], y=df["Age"] )
+
+Insights:
+
+*   Attrition is high for those who have lesser age.
+*   Age median for Attrion is also less and more for No Attrition.
+*   Age feature seems to be a good effect on Attrition
+
+#creating a function to draw bar chart against target variable attrition
+
+def drawBarChart(x):
+  print(df[x].value_counts(), end='\n\n')
+  print(pd.crosstab(columns=[df['Attrition']],index=[df[x]],margins=True,normalize='index',))
+  sns.catplot(x, data=df, aspect=3, kind='count', hue='Attrition', palette=['C1', 'C0']).set_ylabels('Number of Employees')
+
+### BusinessTravel Feature
+
+drawBarChart('BusinessTravel')
+
+Insights:
+
+*   Highest attrition frequent travel. It could be also because of Frequent travel have high number of employee
+*   It seems like employee don't prefer to travel
+
+
+
+### Department Feature
+
+drawBarChart('Department')
+
+Insights:
+
+*   Majority of employee are from R&D department
+*   Attrition is also more in R&D. It could be also because of R&D have high number of employee
+*   Sales Department have more Attrition if compare thee employee with R&D
+
+### EducationField Feature
+
+drawBarChart('EducationField')
+
+Insights:
+
+*   Majority of employee are from Life Science and Medical but Attririon rate is less
+*   Atttrition rate are high in Human Resources followed by Technical degree
+
+
+
+### Gender Feature
+
+drawBarChart('Gender')
+
+Insights:
+
+*   Attrition Rate are very close for both class of Gender gender
+*   Gendter features doesn't play any vital role in Attrition
+
+### Job Role Feature
+
+drawBarChart('JobRole')
+
+Insights:
+
+*   Highest Attrtion rate are in Sales Represetative i.e. approx ~40% followed by Laboratory Technician, Human Resources
+*   Attrition Rate is high in lower role like sales executives, research sceintist etc.
+
+
+
+### Marital Status Feature
+
+drawBarChart('MaritalStatus')
+
+Insights:
+
+*   Attrition rate of single is high, it could they don't have any responsibilty
+*   Maried and divorced don't change frequetly.
+
+### Overtime Feature
+
+#OverTime feature
+drawBarChart('OverTime')
+
+Insights:
+
+*   Attrition is very high for overtime employee. Employees don't want to do overtime, thus attrition is high
+*   Overtime plays a very good role in Attrition 
+
+
+
+### Hourly Rate Feature
+
+sns.catplot('HourlyRate', data=df, aspect=3, kind='count', hue='Attrition', palette=['C1', 'C0']).set_ylabels('Number of Employees')
+
+chart doen't show much insight. let's check mean and standard deviation.
+
+#Hourly rate mean and standard deviation
+print(df.HourlyRate.mean())
+print(np.std(df.HourlyRate))
+
+#Hourly rate mean and standard deviation if attrition is Yes
+print(df[df['Attrition']=='Yes']['HourlyRate'].mean())
+print(np.std(df[df['Attrition']=='Yes']['HourlyRate']))
+
+#Hourly rate mean and standard deviation if attrition is No
+print(df[df['Attrition']=='No']['HourlyRate'].mean())
+print(np.std(df[df['Attrition']=='No']['HourlyRate']))
+
+Insight:
+
+*   As we can Hourly rate have similar distribution for both Attrition classes because mean and standard deviation is very similar
+*   It seems to have very little effect on Attrition
+
+
+
+### Environment Satisfaction Feature
+
+drawBarChart('EnvironmentSatisfaction')
+
+Insights:
+
+*   Employee with less Environment Statisfaction have higher Attrition
+
+### Education Feature
+
+drawBarChart('Education')
+
+Insights:
+
+*   As it mentioned it's ordinal data type which means Education class 5 epmployee having higher degree holder
+*   Education class 1 has higher Attrition rate followed by 2,3,4,5, which means company don't give attention to who has less qualifation
+*   Even though Attrition Rate for all Education class is almost same except class 5
+*   This feature will have less effect on Attrition
+
+### Job Involvement Feature
+
+drawBarChart('JobInvolvement')
+
+Insights:
+
+*   Attrition rate is high if Job involvement is less.
+
+### Monthly Income Feature
+
+#Monthly Income feature
+attrn = df[df['Attrition']=='No']['MonthlyIncome']
+attry = df[df['Attrition']=='Yes']['MonthlyIncome']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+plt.figure(figsize=(15,8))
+sns.boxplot(x=df["Attrition"], y=df["MonthlyIncome"])
+
+Insights:
+
+*   Those employees who fall under 1000-2000 there attrition rate is very high. I seems like they don't want to stay at all
+*   Median is also less for those who have Attrition yes i.e. less monthly salary leads to Attrition
+*   Those who are earning less their attrition rate is high
+
+### MonthlyRate Feature
+
+attrn = df[df['Attrition']=='No']['MonthlyRate']
+attry = df[df['Attrition']=='Yes']['MonthlyRate']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+The above doesn't show much insight, let's draw box plot
+
+plt.figure(figsize=(15,8))
+sns.boxplot(x=df["Attrition"], y=df["MonthlyRate"])
+
+Monthlyrate Median for Attrition is slightly high.
+
+#Hourly rate mean and standard deviation
+print(df.MonthlyRate.mean())
+print(np.std(df.MonthlyRate))
+
+#Hourly rate mean and standard deviation if attrition is Yes
+print(df[df['Attrition']=='Yes']['MonthlyRate'].mean())
+print(np.std(df[df['Attrition']=='Yes']['MonthlyRate']))
+
+#Hourly rate mean and standard deviation if attrition is No
+print(df[df['Attrition']=='No']['MonthlyRate'].mean())
+print(np.std(df[df['Attrition']=='No']['MonthlyRate']))
+
+Insights:
+
+*   As we can Monthly rate have similar distribution for both Attrition classes because mean and standard deviation is very colse
+*   It seems to have very little effect on Attrition
+
+drawBarChart('NumCompaniesWorked')
+
+### Percent Salary Hike Feature
+
+drawBarChart('PercentSalaryHike')
+
+attrn = df[df['Attrition']=='No']['PercentSalaryHike']
+attry = df[df['Attrition']=='Yes']['PercentSalaryHike']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+drawBarChart('PerformanceRating')
+
+Insights:
+
+*   Attrition Rate is almost same for both rating
+*   PerformanceRating doesn't show much effect on Attrition
+
+### Relationship Satisfaction Feature
+
+drawBarChart('RelationshipSatisfaction')
+
+Insights:
+
+*   Relationship Satisfaction doesn't play vital role in Attrition
+*   Though low Relationship Satisfaction has littile more attrition but not major difference.
+
+###Stock Option Level Feature
+
+drawBarChart('StockOptionLevel')
+
+attrn = df[df['Attrition']=='No']['TotalWorkingYears']
+attry = df[df['Attrition']=='Yes']['TotalWorkingYears']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+plt.figure(figsize=(15,8))
+sns.boxplot(x=df["Attrition"], y=df["TotalWorkingYears"])
+
+Insights:
+
+*   Attrition rate high for those who have less working experience
+
+
+
+###Training Times Last Year Feature
+
+attrn = df[df['Attrition']=='No']['TrainingTimesLastYear']
+attry = df[df['Attrition']=='Yes']['TrainingTimesLastYear']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+plt.figure(figsize=(15,8))
+sns.boxplot(x=df["Attrition"], y=df["TrainingTimesLastYear"])
+
+Insights:
+*   Doesn't show effect on Attrition
+
+
+
+drawBarChart('WorkLifeBalance')
+
+Insights:
+
+*   Less work life balance higher Attrition rate
+
+
+
+###Years At Company Feature
+
+#YearsAtCompany
+attrn = df[df['Attrition']=='No']['YearsAtCompany']
+attry = df[df['Attrition']=='Yes']['YearsAtCompany']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+plt.figure(figsize=(15,8))
+sns.boxplot(x=df["Attrition"], y=df["YearsAtCompany"])
+
+Inights:
+
+*   Those who has less year experience have high Attrition rate.
+
+
+
+#YearsInCurrentRole
+#YearsAtCompany
+attrn = df[df['Attrition']=='No']['YearsInCurrentRole']
+attry = df[df['Attrition']=='Yes']['YearsInCurrentRole']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+plt.figure(figsize=(15,8))
+sns.boxplot(x=df["Attrition"], y=df["YearsInCurrentRole"])
+
+Insights:
+
+*   Those who stays 0-3 years in same role tends to more Attrition
+*   Also median is lesser those who have Attrion
+
+attrn = df[df['Attrition']=='No']['YearsSinceLastPromotion']
+attry = df[df['Attrition']=='Yes']['YearsSinceLastPromotion']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+plt.figure(figsize=(15,8))
+sns.boxplot(x=df["Attrition"], y=df["YearsSinceLastPromotion"])
+
+Insights:
+
+*   Those who do not get promotion last three years have more Attrition rate 
+
+#YearsWithCurrManager
+attrn = df[df['Attrition']=='No']['YearsWithCurrManager']
+attry = df[df['Attrition']=='Yes']['YearsWithCurrManager']
+
+plt.figure(figsize=(15,8))
+sns.distplot(attrn)
+sns.distplot(attry)
+
+plt.figure(figsize=(15,8))
+sns.boxplot(x=df["Attrition"], y=df["YearsWithCurrManager"])
+
+# Data Pre-processing
+
+##### Data set contains few features which have no use. let's drop those features
+
+df2 = df.drop(['EmployeeCount','EmployeeNumber','Over18','StandardHours',], axis=1)
+
+def preprocessor(df):
+    res_df = df.copy()
+    le = preprocessing.LabelEncoder()
+    
+    res_df['Attrition'] = le.fit_transform(res_df['Attrition'])
+    res_df['BusinessTravel'] = le.fit_transform(res_df['BusinessTravel'])
+    res_df['Department'] = le.fit_transform(res_df['Department'])
+    res_df['EducationField'] = le.fit_transform(res_df['EducationField'])
+    res_df['Gender'] = le.fit_transform(res_df['Gender'])
+    res_df['JobRole'] = le.fit_transform(res_df['JobRole'])
+    res_df['MaritalStatus'] = le.fit_transform(res_df['MaritalStatus'])
+    res_df['OverTime'] = le.fit_transform(res_df['OverTime'])
+    
+    return res_df
+
+encoded_df = preprocessor(df2)
+encoded_df.head()
+
+X,y = encoded_df.drop(['Attrition'],axis =1), encoded_df['Attrition']
+
+X
+
+###Feature Selection Importance using RandomForestClassifier
+
+# use RandomForestClassifier to look for important key features
+rfc = RandomForestClassifier(random_state=42, n_estimators=200, max_depth=3)
+rfc_model = rfc.fit(X, y)
+
+def variable_importance(fit):
+
+    try:
+        if not hasattr(fit, 'fit'):
+            return print("'{0}' is not an instantiated model from scikit-learn".format(fit)) 
+
+        # Captures whether the model has been trained
+        if not vars(fit)["estimators_"]:
+            return print("Model does not appear to be trained.")
+    except KeyError:
+        print("Model entered does not contain 'estimators_' attribute.")
+
+    importances = fit.feature_importances_
+    indices = np.argsort(importances)[::-1]
+    return {'importance': importances,
+            'index': indices}
+
+var_imp_rf = variable_importance(rfc_model)
+
+importances_rf = var_imp_rf['importance']
+
+indices_rf = var_imp_rf['index']
+
+def variable_importance_plot(importance, indices, name_index):
+
+    #names_index = 
+    index = np.arange(len(names_index))
+
+    importance_desc = sorted(importance)
+    feature_space = []
+    for i in range(indices.shape[0] - 1, -1, -1):
+        feature_space.append(names_index[indices[i]])
+
+    fig, ax = plt.subplots(figsize=(20, 10))
+
+    plt.title('Feature importances for Random Forest Model\\n(HR Employee Attrition)')
+    plt.barh(index,
+             importance_desc,
+             align="center",
+             color = '#875FDB')
+    plt.yticks(index,
+               feature_space)
+
+    plt.ylim(-1, 30)
+    plt.xlim(0, max(importance_desc) + 0.01)
+    plt.xlabel('Mean Decrease in Impurity')
+    plt.ylabel('Feature')
+
+    plt.show()
+    plt.close()
+
+names_index = X.columns
+variable_importance_plot(importances_rf, indices_rf, names_index)
+
+f, ax = plt.subplots(figsize=(20, 15))
+corr = X.corr().round(2)
+mask = np.zeros_like(corr, dtype=np.bool)
+mask[np.triu_indices_from(mask)] = True
+sns.heatmap(corr,
+            mask=mask, 
+            cmap=sns.diverging_palette(255, 17, as_cmap=True),
+            square=True, vmin=-1, vmax=1, annot=True, annot_kws={"size": 12}, ax=ax)
+
+As we can see:
+
+*   MonthlyIncome with Joblevel have high correlation ~0.95, 'll dropping Job level because less feature importance
+*   PercentSalaryHike with PerformanceRating ~ 0.77 , 'll dropping PerformanceRating because less feature importance
+*   TotalWorkingYears with MonthlyIncome ~ 0.77 , 'll dropping TotalWorkingYears because less feature importance
+*   YerasInCurrentRole with YearsAtCompany ~ 0.76 , 'll drpping YerasInCurrentRole because less feature importance
+*   YerasWithCurrManager with YearsAtCompany ~ 0.77 , 'll drpping YerasWithCurrManager because less feature importance
+
+X = X.drop(['JobLevel','PerformanceRating', 'TotalWorkingYears', 'YearsInCurrentRole', 'YearsWithCurrManager'], axis=1)
+
+Let's drop some more features which are playing very less effect on Attrition
+
+X = X.drop(['Gender','BusinessTravel', 'Education', 'EducationField', 'TrainingTimesLastYear','Department','PercentSalaryHike','WorkLifeBalance','HourlyRate','DailyRate','MonthlyRate'], axis=1)
+
+X.columns
+
+###Standardization & One hot coding of Features
+
+As we have numerical fetaure and have different scale so we will standarize at same scale.
+Also we have categorical nominal and ordinal features. We just need nominal fetures to convert into one hot coding
+
+Let's split fetures based on data type and perform operation
+
+#numerical features
+#X_num_features = X[['Age','DailyRate','DistanceFromHome','HourlyRate','MonthlyIncome','MonthlyRate','NumCompaniesWorked','PercentSalaryHike','TrainingTimesLastYear','YearsAtCompany','YearsSinceLastPromotion']]
+X_num_features = X[['Age','DistanceFromHome','MonthlyIncome','NumCompaniesWorked','YearsAtCompany','YearsSinceLastPromotion']]
+
+#nominal features
+#X_nom_features = X[['BusinessTravel','Department','EducationField','Gender','JobRole','MaritalStatus','OverTime']]
+X_nom_features = X[['JobRole','MaritalStatus','OverTime']]
+
+#ordinal features
+X_ord_features = X[['EnvironmentSatisfaction','JobInvolvement','JobSatisfaction','RelationshipSatisfaction','StockOptionLevel']]
+
+As we can see scaling is done using StandardScaler
+
+ss = StandardScaler()
+X_num_scaled = pd.DataFrame(ss.fit_transform(X_num_features),columns = X_num_features.columns)
+X_num_scaled.head()
+
+Also performed One hot coding on nominal data
+
+X_nom_ohot = pd.get_dummies(X_nom_features, columns=X_nom_features.columns)
+X_nom_ohot.head()
+
+Let's combine all the features together 
+
+one very important things we are not going to use one hot coting features when we 'll be using tree based model like Decision tree, random forest etc. Because Continuous variables will be given more importance than the dummy variables by the algorithm which will obscure the order of feature importance resulting in poorer performance
+
+So we will creating two different set of train and test data one for non-tree based and one for tree based
+
+X1_final = pd.concat([X_num_scaled, X_ord_features, X_nom_ohot], axis=1)
+X1_final.head()
+
+X2_final = pd.concat([X_num_scaled, X_ord_features, X_nom_features], axis=1)
+X2_final.head()
+
+As we can see above our data is ready to train model. Now split data into train and test
+
+## Before Modeling
+
+###Split the Dataset for Training & Testing
+
+def split_train_test(X,y,test_size):
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = test_size, random_state=42)# splitted data in 80% train and 20% test ratio
+  return X_train, X_test, y_train, y_test
+
+#Logistic Regression model
+
+####Split train and test data
+
+X_train, X_test, y_train, y_test = split_train_test(X1_final,y,0.2)
+
+####Hyper-Parameter Optimization using GridSearchCV
+
+np.random.seed(42)
+start = time.time()
+
+model_logreg = LogisticRegression(max_iter=500, random_state=42)
+grid_values = {'penalty': ['l1', 'l2'],'C':[0.5,1,10,25,50,100,200], 'solver' : ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']}
+grid_clf_acc = GridSearchCV(model_logreg, 
+                            param_grid = grid_values,
+                            scoring = 'recall',
+                            cv = 10,
+                            n_jobs = 3)
+grid_clf_acc.fit(X_train, y_train)
+print('Best Parameters using grid search: \n', grid_clf_acc.best_params_)
+end = time.time()
+print('Time taken in grid search: {0: .2f}'.format(end - start))
+
+# instantiate the model (using the default parameters)
+model_logreg.set_params(C= 25, 
+                        penalty= 'l1', 
+                        solver= 'saga')
+# fit the model with data
+model_logreg.fit(X_train,y_train)
+
+model_logreg_score_train =model_logreg.score(X_train, y_train)
+print("Training score: ",model_logreg_score_train)
+model_logreg_score_test = model_logreg.score(X_test, y_test)
+print("Testing score: ",model_logreg_score_test)
+
+y_pred=model_logreg.predict(X_test)
+
+####Performance Metrics
+
+def plot_confusionmatrix(y_test, y_pred):
+  cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
+  class_names=[0,1] # name  of classes
+  fig, ax = plt.subplots()
+  tick_marks = np.arange(len(class_names))
+  plt.xticks(tick_marks, class_names)
+  plt.yticks(tick_marks, class_names)
+  # create heatmap
+  sns.heatmap(pd.DataFrame(cnf_matrix), annot=True, cmap="YlGnBu" ,fmt='g')
+  ax.xaxis.set_label_position("top")
+  plt.tight_layout()
+  plt.title('Confusion matrix', y=1.1)
+  plt.ylabel('Actual label')
+  plt.xlabel('Predicted label')
+
+def plot_auc(X_test, model):
+  y_pred_proba = model.predict_proba(X_test)[::,1]
+  auc = metrics.roc_auc_score(y_test, y_pred_proba)
+  fpr, tpr, _ = metrics.roc_curve(y_test, y_pred_proba)
+  plt.plot(fpr,tpr,label="data 1, auc="+str(auc))
+  plt.legend(loc=4)
+  plt.plot([0, 1], [0, 1], linestyle='--',)
+  plt.ylabel('True Positive Rate')
+  plt.xlabel('False Positive Rate')
+  plt.show()
+
+def print_class_report(y_test, y_pred, dx, alg_name):
+    print('Classification Report for {0}:'.format(alg_name))
+    print(classification_report(y_test, y_pred))
+
+plot_confusionmatrix(y_test, y_pred)
+
+plot_auc(X_test, model_logreg)
+
+dx = ['No', 'Yes']
+class_report = print_class_report(y_test, y_pred, dx, 'Logistic Regression')
+
+print("Accuracy:",metrics.accuracy_score(y_test, y_pred))
+print("Precision:",metrics.precision_score(y_test, y_pred))
+print("Recall:",metrics.recall_score(y_test, y_pred))
+
+#Decision Tree Model
+
+####Split train and test data
+
+X2_train, X2_test, y2_train, y2_test = split_train_test(X2_final,y,0.2)
+
+X2_train.head()
+
+####HyperParameter Optimization using Grid Search
+
+np.random.seed(42)
+start = time.time()
+
+model_dt = DecisionTreeClassifier(random_state=42)
+
+grid_values = {'criterion' : ['entropy','gini'],
+               'max_depth' : [10,20,30,50,100],
+               'max_features' : [10,25,50,100,200],
+               'min_samples_leaf' : [1,2,5,10,20], 
+               'min_samples_split' : [2,3,4,5,10],
+               'ccp_alpha' : [0.0,0.5,1,10,25,50,100]
+               }
+
+grid_clf_acc = GridSearchCV(model_dt, 
+                            param_grid = grid_values,
+                            scoring = 'recall',
+                            cv = 10,
+                            n_jobs = 3)
+
+grid_clf_acc.fit(X2_train, y2_train)
+print('Best Parameters using grid search: \n', grid_clf_acc.best_params_)
+end = time.time()
+print('Time taken in grid search: {0: .2f}'.format(end - start))
+
+# Decision tree with depth = 2
+model_dt.set_params(max_depth=20, 
+                    criterion = "entropy", 
+                    max_features= 10)
+model_dt.fit(X2_train, y2_train)
+
+model_dt_score_train = model_dt.score(X2_train, y2_train)
+print("Training score: ",model_dt_score_train)
+model_dt_score_test = model_dt.score(X2_test, y2_test)
+print("Testing score: ",model_dt_score_test)
+
+y_pred=model_dt.predict(X2_test)
+
+####Performance Metrics
+
+plot_confusionmatrix(y2_test, y_pred)
+
+plot_auc(X2_test, model_dt)
+
+dx = ['No', 'Yes']
+class_report = print_class_report(y_test, y_pred, dx, 'Decision Tree Classifier')
+
+print("Accuracy:",metrics.accuracy_score(y2_test, y_pred))
+print("Precision:",metrics.precision_score(y2_test, y_pred))
+print("Recall:",metrics.recall_score(y2_test, y_pred))
+
+#Random forest Classifier Model
+
+####HyperParameter Optimization using Grid Search
+
+fit_rf = RandomForestClassifier(random_state=42)
+
+np.random.seed(42)
+start = time.time()
+
+param_dist = {'max_depth': [2, 3, 4, 8, 10],
+              'bootstrap': [True, False],
+              'max_features': ['auto', 'sqrt', 'log2', None],
+              'criterion': ['gini', 'entropy']}
+
+cv_rf = GridSearchCV(fit_rf, cv = 10,
+                     param_grid=param_dist, 
+                     n_jobs = 3)
+
+cv_rf.fit(X2_train, y2_train)
+print('Best Parameters using grid search: \n', cv_rf.best_params_)
+end = time.time()
+print('Time taken in grid search: {0: .2f}'.format(end - start))
+
+# Set best parameters given by grid search 
+fit_rf.set_params(criterion = 'entropy',
+                  max_depth = 10,
+                  max_features= 'auto',
+                  bootstrap= True)
+
+#####Finding optimal number of trees
+
+fit_rf.set_params(oob_score=True,
+                  warm_start=False)
+
+min_estimators = 200
+max_estimators = 1000
+
+error_rate = {}
+
+for i in range(min_estimators, max_estimators + 1):
+    fit_rf.set_params(n_estimators=i)
+    fit_rf.fit(X2_train, y2_train)
+
+    oob_error = 1 - fit_rf.oob_score_
+    error_rate[i] = oob_error
+
+# Convert dictionary to a pandas series for easy plotting 
+oob_series = pd.Series(error_rate)
+
+fig, ax = plt.subplots(figsize=(10, 10))
+
+ax.set_facecolor('#fafafa')
+
+oob_series.plot(kind='line',color = 'red')
+plt.axhline(0.065, color='#875FDB',linestyle='--')
+plt.axhline(0.0634, color='#875FDB',linestyle='--')
+plt.xlabel('n_estimators')
+plt.ylabel('OOB Error Rate')
+plt.title('OOB Error Rate Across various Forest sizes \n(From 15 to 1000 trees)')
+
+print('OOB Error rate for 300 trees is: {0:.5f}'.format(oob_series[700]))
+
+# Refine the tree via OOB Output
+fit_rf.set_params(n_estimators=700,
+                  bootstrap = True,
+                  warm_start=False, 
+                  oob_score=False)
+
+fit_rf.fit(X2_train, y2_train)
+
+fit_rf_score_train = fit_rf.score(X2_train, y2_train)
+print("Training score: ",fit_rf_score_train)
+fit_rf_score_test = fit_rf.score(X2_test, y2_test)
+print("Testing score: ",fit_rf_score_test)
+
+y_pred = fit_rf.predict(X2_test)
+
+####Performance Metrics
+
+plot_confusionmatrix(y2_test, y_pred)
+
+plot_auc(X2_test, fit_rf)
+
+dx = ['No', 'Yes']
+class_report = print_class_report(y2_test, y_pred, dx, 'Random Forest Classifier')
+
+print("Accuracy:",metrics.accuracy_score(y2_test, y_pred))
+print("Precision:",metrics.precision_score(y2_test, y_pred))
+print("Recall:",metrics.recall_score(y2_test, y_pred))
+
+#Conclusion
+
+As we can see tree based Algo giving better performance
+
+Decision Tree
+
+Accuracy: 0.9659863945578231,
+Precision: 0.898989898989899,
+Recall: 0.898989898989899
+
+Random Forest
+
+Accuracy: 0.9302721088435374,
+Precision: 0.967741935483871,
+Recall: 0.6060606060606061
+
+
+
+
+
+
+
+Decision tree is giving better Performance
